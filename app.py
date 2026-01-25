@@ -295,8 +295,14 @@ def index():
     mission = get_mission()
     return render_template_string(HTML_TEMPLATE, mission=mission, bomber=mission.bomber)
 
-@app.route('/turn', methods=['POST'])
+@app.route('/turn', methods=['GET', 'POST'])
 def turn():
+    # Safety Net: If the browser tries to 'visit' /turn directly (GET),
+    # just redirect them back to the dashboard.
+    if request.method == 'GET':
+        return redirect(url_for('index'))
+
+    # Standard Logic (POST)
     mission = get_mission()
     mission.resolve_turn(request.form.to_dict())
     return redirect(url_for('index'))
