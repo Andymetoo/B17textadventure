@@ -26,8 +26,8 @@ Open **http://127.0.0.1:5000** in your browser.
 
 ## Try a complete loop in five minutes
 
-1. Review the two mission cards. Priority targets offer up to nine points;
-   supporting operations offer fewer points plus additional supplies or parts.
+1. Review the mission cards. Priority targets offer seven to ten points;
+   supporting operations offer fewer points plus supplies, parts, or reconnaissance that helps later sorties.
 2. Select three or four aircraft from the flight line. The formation estimate
    accounts for weather, experience, fatigue, and aircraft condition, but cannot
    promise that every aircraft will reach the target.
@@ -46,23 +46,22 @@ No response deadline, midair choice, or notification needs your attention.
 ## The playable rules
 
 - Six aircraft and their regular crews to start; requisition up to eight slots.
-- Twelve operations per tour. Aim for 60 campaign points; 75 earns a distinction.
+- Choose a 7-, 14-, 21-, or 28-operation tour before dispatching. The default is 21. Goals are 35, 65, 95, and 125 points respectively; 120% of the goal earns a distinction. At one operation a day, a tour lasts roughly one to four weeks. There is no enforced daily lockout or missed-day penalty.
 - One formation airborne at a time; its size is limited by readiness and supplies.
-- Priority missions cost two supplies per aircraft; support costs one.
+- Priority and follow-up missions cost two supplies per aircraft; support costs one. Seven mission families offer distinct advantages; successful strikes can change the next briefing.
 - Condition below 55 or fatigue at 85 or above prevents dispatch. Poorer condition
   and higher fatigue also affect outcomes before those grounding thresholds.
 - Crew traits have specific effects: steady crews reduce incoming damage,
   navigators limit cloud penalties, and bombing specialists improve target effect.
 - Repairs restore an aircraft to 100 condition in 45 minutes, consuming one part
-  per 20 missing condition (rounded up). There is one maintenance bay.
+  per 20 missing condition (rounded up). There is one maintenance bay. Paid repair jobs queue and finish in sequence while you are away.
 - A recovery assignment consumes one supply and reduces fatigue by 55 after
-  45 minutes. One crew can be on a recovery assignment at a time.
+  45 minutes. One crew can be on a recovery assignment at a time; paid assignments queue behind it.
 - Crews not dispatched recover 25 fatigue when an operation concludes.
 - Before each new operation, the base receives four supplies and one part.
   Stores are capped at 30 supplies and 20 parts. Extra support allocations scale
   with target effect, rather than being guaranteed for merely launching.
-- Additional/replacement aircraft and developing crews cost five supplies and
-  three parts. Replacements occupy the missing aircraft's slot and retain the
+- Additional/replacement aircraft cost five supplies and three parts. Missing crews are replaced by developing crews; survivors of a written-off aircraft retain their identity, experience, medical leave, and service history in the replacement. Replacements occupy the missing aircraft's slot and retain the
   old aircraft's history in the debrief archive.
 - Standing down costs an operation and earns no points, but provides reserve
   recovery and the next allocation. It is a recovery path, not an infinite farm.
@@ -73,7 +72,8 @@ No response deadline, midair choice, or notification needs your attention.
 
 | File | Responsibility |
 | --- | --- |
-| `models.py` | Initial roster, JSON-safe campaign state, stable operation offers |
+| `models.py` | Initial roster, campaign state, tour setup, and save migration |
+| `content.py` | Authored mission families, ground situations, reports, and campaign chapters |
 | `game_engine.py` | Validated player commands and deterministic scheduled events |
 | `storage.py` | Transactional SQLite persistence and revision checks |
 | `app.py` | Session identity, form validation, application factory, HTTP routes |
@@ -90,6 +90,10 @@ State is saved in `instance/campaigns.sqlite3`, and the generated signing key in
 browser's signed session cookie identifies its campaign. This prototype has no
 accounts or cross-device sync: clearing cookies starts a different campaign.
 Changing the signing key invalidates existing browser sessions.
+
+Version-1 saves upgrade automatically. Existing twelve-operation tours retain
+their length and 60-point goal. A mission already airborne finishes under its
+original rules; subsequent departures use the new content.
 
 SQLite transactions serialize commands; revision checks reject stale or duplicate
 forms. CSRF tokens protect POST actions. GET requests can resolve already-due work
@@ -119,18 +123,53 @@ python -m unittest discover -s tests -v
 Tests cover the complete dispatch/debrief loop, autonomous returns, offline
 equivalence, persistence across restart, concurrent and duplicate submissions,
 resource costs, grounding and maintenance restrictions, recovery, replacement,
-tour completion, CSRF, session isolation, and disabled fast-forward enforcement.
+tour completion, CSRF, session isolation, and disabled fast-forward enforcement. Content tests also cover contextual choices, follow-up expiry, strategic effects, medical leave, diversions, queued work, and a saved original-version mission fixture.
+
+## Stories and consequences
+
+The first two operations are gentler and cannot produce a fatal loss under the
+new flight rules. Later operations introduce engine and oxygen faults, cloud
+separation, alternative targets, hung bombs, strong or scattered bombing runs,
+photographic outcomes, return interceptions, medical leave, diversions, and
+forced landings. Aircraft can be missing, or written off with the crew recovered.
+Crews make all decisions in flight.
+
+A diverted aircraft returns automatically six hours after the main debrief.
+Medical leave grounds a crew for the next operation, rather than making the
+player wait at the screen. Its availability is shown on the aircraft card.
+Milestones and significant events remain in each crew's service record.
+
+Between operations, an occasional command-desk situation offers two clearly
+stated choices: exchanges, intelligence, escort coordination, leave, training,
+mentoring, or time for the crews after losses. Every offer can be declined for
+no change. Ignoring an offer when dispatching chooses that same default. Offers
+never expire because the player was offline.
+
+Railway strikes can reveal a follow-up target; reconnaissance improves accuracy;
+airfield strikes reduce exposure. These advantages last for a bounded number
+of operations and are shown on the board. Benefits never promise sorties beyond
+the end of the tour. Different seeds, formations, and decisions produce different
+rosters and future options without requiring constant supervision.
+
+See [the campaign design notes](docs/campaign-design.md) for the content contract
+and [the tour simulation tool](tools/simulate_tours.py) for a reproducible balance
+probe:
+
+```sh
+python tools/simulate_tours.py --runs 100
+```
 
 ## Deliberate prototype limits
 
-Aircraft retain their regular crews; individual crew transfers and injuries are
-not modeled. Returning aircraft, including early turnbacks, are released to the
-flight line at the operation's final return checkpoint. Communications use a
-small collection of state-driven reports. There are no push notifications,
-background auto-dispatches, base construction, equipment trees, or tactical crew
-menus. Historical setting and mission durations are abstractions.
+Aircraft normally retain their regular crews; individual transfers and named
+crew positions are not modeled. Medical leave applies to the crew as a whole.
+Early turnbacks reach the roster at the formation's final return checkpoint;
+diversions have their own later arrival event. Reports are authored templates
+selected by actual outcomes, not generated conversations. There are no accounts,
+cross-device sync, push notifications, base construction, or equipment trees.
+Historical setting and mission durations are abstractions.
 
-The next design work should follow human playtesting: tune the mission/resource
-tradeoff, give familiar crews more distinct voices, and add situation-dependent
-mission opportunities. Avoid adding management screens until the existing loop
-is enjoyable across several operations.
+Human playtesting is still needed for long-tour balance and rendered desktop/
+mobile layout. The connected browser could not reach the local preview during
+implementation. Prefer tuning this loop and expanding state-dependent situations
+over adding more management screens.

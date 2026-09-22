@@ -4,7 +4,7 @@ import sqlite3
 from pathlib import Path
 
 from game_engine import RuleError, advance
-from models import SCHEMA_VERSION, new_campaign
+from models import migrate_campaign, new_campaign
 
 
 class CampaignStore:
@@ -24,11 +24,13 @@ class CampaignStore:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT data FROM campaigns WHERE id = ?", (campaign_id,)).fetchone()
             state = json.loads(row[0]) if row else new_campaign()
-            if state.get("schema") != SCHEMA_VERSION:
-                raise RuleError("This save uses an unsupported version. Preserve the database before upgrading.")
             original = json.dumps(state, sort_keys=True)
+            try:
+                migrate_campaign(state)
+            except ValueError as error:
+                raise RuleError(str(error)) from error
             # Check against the rendered page, then catch up due work atomically before the command.
-            if action and expected_revision != state["revision"]:
+            if action and (expected_revision != state["revision"] or state.get("schema") != json.loads(original).get("schema")):
                 raise RuleError("The airfield has changed since this page opened. Review the updated board and try again.")
             now = wall_now + state["clock_offset"]
             advance(state, now)

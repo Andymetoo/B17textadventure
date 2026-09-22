@@ -1,9 +1,10 @@
 """JSON-safe campaign data. Each aircraft flies with its regular ten-person crew."""
-import random
 import secrets
 
-SCHEMA_VERSION = 1
-CAMPAIGN_LENGTH = 12
+from content import TOUR_GOALS, TOUR_LENGTHS, build_briefing
+
+SCHEMA_VERSION = 2
+CAMPAIGN_LENGTH = 21
 MAX_AIRCRAFT = 8
 ROSTER = [
     ("Lucky Penny", "Reynolds", "steady", .86, 100, 22),
@@ -26,41 +27,49 @@ def new_aircraft(index, replacement=0):
     name, captain, trait, skill, condition, fatigue = ROSTER[index]
     if replacement:
         name = f"{name} II" if replacement == 1 else f"{name} {replacement + 1}"
-        captain = f"Replacement crew {index + 1}-{replacement}"
+        captain = ("Preston", "Collins", "Webb", "Adams", "Carter", "Hughes", "Fuller", "Grant", "Dawson", "Price", "Bennett", "Hayes", "Turner", "Ward", "Foster", "Blake")[(index + 8 * (replacement - 1)) % 16]
         skill, condition, fatigue = .65, 100, 0
     return {"id": f"a{index + 1}", "name": name, "captain": captain,
             "trait": trait, "skill": skill, "condition": condition,
             "fatigue": fatigue, "sorties": 0, "lost": False,
-            "job": None, "replacement": replacement}
+            "job": None, "replacement": replacement, "history": [], "milestones": [],
+            "unavailable_until": 0, "leave_reason": "", "away_until": None, "crew_fate": "safe"}
 
 
-def new_campaign(seed=None):
+def new_campaign(seed=None, length=CAMPAIGN_LENGTH):
+    if length not in TOUR_LENGTHS:
+        raise ValueError("Choose a 7-, 14-, 21-, or 28-operation tour.")
     seed = secrets.randbelow(2 ** 31) if seed is None else seed
     return {"schema": SCHEMA_VERSION, "seed": seed, "revision": 0,
-            "operation": 1, "length": CAMPAIGN_LENGTH, "score": 0,
+            "operation": 1, "length": length, "goal": TOUR_GOALS[length], "score": 0,
             "supplies": 18, "parts": 8, "losses": 0,
             "aircraft": [new_aircraft(i) for i in range(6)],
             "active": None, "debriefs": [], "messages": [],
-            "clock_offset": 0, "completed": False}
+            "clock_offset": 0, "completed": False, "effects": {}, "opportunity": None,
+            "decision": None, "decision_history": [], "journal": []}
 
 
 def briefing(state):
-    """Stable offers: waiting or refreshing never changes the next briefing."""
-    rng = random.Random(f"{state['seed']}:briefing:{state['operation']}")
-    weather = rng.choice(["Clear", "Broken cloud", "Overcast"])
-    industry = ["Rail marshalling yard", "Engine assembly works", "Coastal repair docks",
-                "Aircraft components plant", "River freight junction", "Fuel distribution depot"]
-    support = ["Forward supply depot", "Coastal transport sidings", "Vehicle repair works"]
-    late = state['operation'] > 6
-    return [
-        {"id": "priority", "name": rng.choice(industry), "type": "Priority objective",
-         "description": "A valuable target with heavier defenses. A strong formation earns substantial campaign progress.",
-         "weather": weather, "risk": .43 if late else .36,
-         "required": 2.55 if late else 2.25, "reward": 9,
-         "cost": 2, "hours": 3, "bonus": "none"},
-        {"id": "support", "name": rng.choice(support), "type": "Supporting operation",
-         "description": "A shorter assignment. Effective bombing secures an extra allocation for this detachment.",
-         "weather": weather, "risk": .23, "required": 1.65,
-         "reward": 4, "cost": 1, "hours": 2,
-         "bonus": rng.choice(["supplies", "parts"])},
-    ]
+    return build_briefing(state)
+
+
+def migrate_campaign(state):
+    """Upgrade existing saves in place; retain 12-operation tours and v1 flights."""
+    if state.get("schema") == SCHEMA_VERSION:
+        return
+    if state.get("schema") != 1:
+        raise ValueError("This save uses an unsupported version. Preserve the database before upgrading.")
+    state.update(schema=SCHEMA_VERSION, goal=state["length"] * 5, effects={},
+                 opportunity=None, decision=None, decision_history=[], journal=[])
+    defaults = {"history": [], "milestones": [], "unavailable_until": 0,
+                "leave_reason": "", "away_until": None, "crew_fate": "safe"}
+    import copy
+    for plane in state["aircraft"]:
+        for key, value in defaults.items():
+            plane.setdefault(key, copy.deepcopy(value))
+        if plane["lost"]:
+            plane["crew_fate"] = "missing"
+    # Old mission snapshots and RNG paths are deliberately left intact. Their
+    # resolver finishes the dispatched operation under its original rules.
+    if state["active"]:
+        state["active"].setdefault("rules_version", 1)

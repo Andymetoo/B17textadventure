@@ -8,6 +8,7 @@ from flask import Flask, abort, flash, jsonify, redirect, render_template, reque
 
 import game_engine as engine
 from models import TRAITS, briefing, new_campaign
+from content import TOUR_LENGTHS, chapter
 from storage import CampaignStore
 
 
@@ -70,7 +71,9 @@ def create_app(config=None):
         ready = sum(engine.availability(state, p) == "Available" for p in state["aircraft"])
         return render_template("airfield.html", state=state, now=now, missions=missions,
             engine=engine, traits=TRAITS, bay_busy=bay_busy, rest_busy=rest_busy, ready=ready,
-            next_event=engine.next_event(state), fast_forward=app.config["ALLOW_FAST_FORWARD"])
+            next_event=engine.next_event(state), fast_forward=app.config["ALLOW_FAST_FORWARD"],
+            chapter=chapter(state), tour_lengths=TOUR_LENGTHS, decision_blocker=engine.decision_blocker(state),
+            veterans=sorted((p for p in state["aircraft"] if p.get("crew_fate") == "safe"), key=lambda p: p["sorties"], reverse=True)[:3])
 
     @app.get("/status")
     def status():
@@ -80,7 +83,7 @@ def create_app(config=None):
     @app.post("/command/<command>")
     def command(command):
         campaign_id = identity()
-        if not secrets.compare_digest(request.form.get("csrf", ""), session["csrf"]):
+        if not secrets.compare_digest(request.form.get("csrf", "").encode(), session["csrf"].encode()):
             abort(400, "This form has expired. Reload the airfield before trying again.")
         try:
             revision = int(request.form.get("revision", "-1"))
@@ -104,10 +107,22 @@ def create_app(config=None):
                     raise engine.RuleError("No scheduled work to fast-forward.")
                 state["clock_offset"] += max(0, event[0] - now)
                 engine.advance(state, event[0])
+            elif command == "ground-choice":
+                engine.choose_ground(state, request.form.get("decision"), request.form.get("choice"), now)
+            elif command == "tour-length":
+                try:
+                    length = int(request.form.get("length", "0"))
+                except ValueError:
+                    raise engine.RuleError("Choose a valid tour length.")
+                engine.set_tour_length(state, length)
             elif command == "reset":
+                try:
+                    fresh = new_campaign(length=int(request.form.get("length", "21")))
+                except ValueError as error:
+                    raise engine.RuleError(str(error)) from error
                 previous_revision = state["revision"]
                 state.clear()
-                state.update(new_campaign())
+                state.update(fresh)
                 state["revision"] = previous_revision
             else:
                 raise engine.RuleError("Unknown airfield command.")

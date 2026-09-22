@@ -76,8 +76,9 @@ class SimulationTests(unittest.TestCase):
     def test_maintenance_has_capacity_cost_and_duration(self):
         start_job(self.state, 'a5', 'repair', 0)
         self.assertEqual(self.state['parts'], 6)
-        with self.assertRaises(RuleError):
-            start_job(self.state, 'a2', 'repair', 1)
+        start_job(self.state, 'a2', 'repair', 1)
+        self.assertEqual(self.state['aircraft'][1]['job']['starts'], 2700)
+        self.assertEqual(self.state['aircraft'][1]['job']['due'], 5400)
         advance(self.state, 2699)
         self.assertEqual(self.state['aircraft'][4]['condition'], 62)
         advance(self.state, 2700)
@@ -134,7 +135,7 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(self.state['supplies'], 4)
         self.assertEqual(self.state['operation'], 2)
         self.assertEqual(self.state['score'], 0)
-        for _ in range(11):
+        for _ in range(self.state["length"] - 1):
             stand_down(self.state, 1)
         self.assertTrue(self.state['completed'])
         with self.assertRaises(RuleError):
@@ -146,6 +147,7 @@ class SimulationTests(unittest.TestCase):
         self.fly()
         report = copy.deepcopy(self.state['debriefs'])
         self.state['aircraft'][0]['lost'] = True
+        self.state['aircraft'][0]['crew_fate'] = 'missing'
         requisition(self.state, 'a1', 2000)
         self.assertEqual(len(self.state['aircraft']), 6)
         self.assertFalse(self.state['aircraft'][0]['lost'])
@@ -270,11 +272,11 @@ class PersistenceAndHTTPTests(unittest.TestCase):
         self.assertEqual(len(self.state()['aircraft']), 6)
 
     def test_completed_tour_renders_and_retains_archive(self):
-        for _ in range(12):
+        for _ in range(self.state()["length"]):
             page = self.post('stand-down')
         self.assertIn(b'The tour is complete', page.data)
         self.assertNotIn(b'id="dispatch-form"', page.data)
-        self.assertEqual(len(self.state()['debriefs']), 12)
+        self.assertEqual(len(self.state()['debriefs']), self.state()['length'])
 
 
 if __name__ == '__main__':
