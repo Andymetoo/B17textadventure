@@ -1,0 +1,421 @@
+{
+  "saved": {
+    "schema": 1,
+    "seed": 77,
+    "revision": 0,
+    "operation": 1,
+    "length": 12,
+    "score": 0,
+    "supplies": 12,
+    "parts": 6,
+    "losses": 0,
+    "aircraft": [
+      {
+        "id": "a1",
+        "name": "Lucky Penny",
+        "captain": "Reynolds",
+        "trait": "steady",
+        "skill": 0.86,
+        "condition": 100,
+        "fatigue": 22,
+        "sorties": 0,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      },
+      {
+        "id": "a2",
+        "name": "Belle of the Blue",
+        "captain": "Morgan",
+        "trait": "precision",
+        "skill": 0.81,
+        "condition": 94,
+        "fatigue": 10,
+        "sorties": 0,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      },
+      {
+        "id": "a3",
+        "name": "Second Helping",
+        "captain": "Kowalski",
+        "trait": "navigator",
+        "skill": 0.78,
+        "condition": 88,
+        "fatigue": 0,
+        "sorties": 0,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      },
+      {
+        "id": "a4",
+        "name": "Sunday Punch",
+        "captain": "Halloway",
+        "trait": "steady",
+        "skill": 0.73,
+        "condition": 100,
+        "fatigue": 48,
+        "sorties": 0,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      },
+      {
+        "id": "a5",
+        "name": "Paper Moon",
+        "captain": "Valenti",
+        "trait": "navigator",
+        "skill": 0.76,
+        "condition": 62,
+        "fatigue": 12,
+        "sorties": 0,
+        "lost": false,
+        "job": {
+          "kind": "repair",
+          "due": 3700
+        },
+        "replacement": 0
+      },
+      {
+        "id": "a6",
+        "name": "Old Reliable",
+        "captain": "Miller",
+        "trait": "precision",
+        "skill": 0.89,
+        "condition": 78,
+        "fatigue": 60,
+        "sorties": 0,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      }
+    ],
+    "active": {
+      "operation": 1,
+      "mission": {
+        "id": "priority",
+        "name": "Aircraft components plant",
+        "type": "Priority objective",
+        "description": "A valuable target with heavier defenses. A strong formation earns substantial campaign progress.",
+        "weather": "Clear",
+        "risk": 0.36,
+        "required": 2.25,
+        "reward": 9,
+        "cost": 2,
+        "hours": 3,
+        "bonus": "none"
+      },
+      "plane_ids": [
+        "a1",
+        "a2",
+        "a3"
+      ],
+      "snapshots": [
+        {
+          "id": "a1",
+          "name": "Lucky Penny",
+          "captain": "Reynolds",
+          "trait": "steady",
+          "skill": 0.86,
+          "condition": 100,
+          "fatigue": 22,
+          "sorties": 0,
+          "lost": false,
+          "job": null,
+          "replacement": 0
+        },
+        {
+          "id": "a2",
+          "name": "Belle of the Blue",
+          "captain": "Morgan",
+          "trait": "precision",
+          "skill": 0.81,
+          "condition": 94,
+          "fatigue": 10,
+          "sorties": 0,
+          "lost": false,
+          "job": null,
+          "replacement": 0
+        },
+        {
+          "id": "a3",
+          "name": "Second Helping",
+          "captain": "Kowalski",
+          "trait": "navigator",
+          "skill": 0.78,
+          "condition": 88,
+          "fatigue": 0,
+          "sorties": 0,
+          "lost": false,
+          "job": null,
+          "replacement": 0
+        }
+      ],
+      "started": 1000,
+      "returns": 1120,
+      "phase": 1,
+      "due": [
+        1030.0,
+        1072.0,
+        1120
+      ],
+      "results": {
+        "a1": {
+          "id": "a1",
+          "name": "Lucky Penny",
+          "captain": "Reynolds",
+          "condition": 85,
+          "lost": false,
+          "aborted": false,
+          "contribution": 0,
+          "fatigue": 53,
+          "notes": [
+            "Enemy action caused 13 condition damage."
+          ]
+        },
+        "a2": {
+          "id": "a2",
+          "name": "Belle of the Blue",
+          "captain": "Morgan",
+          "condition": 63,
+          "lost": false,
+          "aborted": false,
+          "contribution": 0,
+          "fatigue": 38,
+          "notes": [
+            "Enemy action caused 26 condition damage."
+          ]
+        },
+        "a3": {
+          "id": "a3",
+          "name": "Second Helping",
+          "captain": "Kowalski",
+          "condition": 65,
+          "lost": false,
+          "aborted": false,
+          "contribution": 0,
+          "fatigue": 26,
+          "notes": [
+            "Enemy action caused 20 condition damage."
+          ]
+        }
+      },
+      "effect": 0,
+      "cost": 6
+    },
+    "debriefs": [],
+    "messages": [
+      {
+        "at": 1000,
+        "speaker": "Chief mechanic",
+        "text": "Paper Moon is in the bay. 2 spare parts committed; ready in 45 minutes.",
+        "tone": "normal"
+      },
+      {
+        "at": 1000,
+        "speaker": "Operations",
+        "text": "3 aircraft dispatched to Aircraft components plant. Captains have authority to turn back if their aircraft becomes unsafe.",
+        "tone": "normal"
+      },
+      {
+        "at": 1030.0,
+        "speaker": "Radio room",
+        "text": "Outbound report: 3 aircraft continuing toward the target. Crews are handling conditions on board.",
+        "tone": "normal"
+      }
+    ],
+    "clock_offset": 0,
+    "completed": false
+  },
+  "expected": {
+    "schema": 1,
+    "seed": 77,
+    "revision": 0,
+    "operation": 2,
+    "length": 12,
+    "score": 9,
+    "supplies": 16,
+    "parts": 7,
+    "losses": 0,
+    "aircraft": [
+      {
+        "id": "a1",
+        "name": "Lucky Penny",
+        "captain": "Reynolds",
+        "trait": "steady",
+        "skill": 0.878,
+        "condition": 85,
+        "fatigue": 53,
+        "sorties": 1,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      },
+      {
+        "id": "a2",
+        "name": "Belle of the Blue",
+        "captain": "Morgan",
+        "trait": "precision",
+        "skill": 0.8280000000000001,
+        "condition": 63,
+        "fatigue": 38,
+        "sorties": 1,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      },
+      {
+        "id": "a3",
+        "name": "Second Helping",
+        "captain": "Kowalski",
+        "trait": "navigator",
+        "skill": 0.798,
+        "condition": 65,
+        "fatigue": 26,
+        "sorties": 1,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      },
+      {
+        "id": "a4",
+        "name": "Sunday Punch",
+        "captain": "Halloway",
+        "trait": "steady",
+        "skill": 0.73,
+        "condition": 100,
+        "fatigue": 23,
+        "sorties": 0,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      },
+      {
+        "id": "a5",
+        "name": "Paper Moon",
+        "captain": "Valenti",
+        "trait": "navigator",
+        "skill": 0.76,
+        "condition": 100,
+        "fatigue": 0,
+        "sorties": 0,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      },
+      {
+        "id": "a6",
+        "name": "Old Reliable",
+        "captain": "Miller",
+        "trait": "precision",
+        "skill": 0.89,
+        "condition": 78,
+        "fatigue": 35,
+        "sorties": 0,
+        "lost": false,
+        "job": null,
+        "replacement": 0
+      }
+    ],
+    "active": null,
+    "debriefs": [
+      {
+        "operation": 1,
+        "target": "Aircraft components plant",
+        "at": 1120,
+        "points": 9,
+        "effect": 100,
+        "cost": 6,
+        "bonus": "None",
+        "results": [
+          {
+            "id": "a1",
+            "name": "Lucky Penny",
+            "captain": "Reynolds",
+            "condition": 85,
+            "lost": false,
+            "aborted": false,
+            "contribution": 0.7463880281938562,
+            "fatigue": 53,
+            "notes": [
+              "Enemy action caused 13 condition damage."
+            ],
+            "status": "Home"
+          },
+          {
+            "id": "a2",
+            "name": "Belle of the Blue",
+            "captain": "Morgan",
+            "condition": 63,
+            "lost": false,
+            "aborted": false,
+            "contribution": 0.724099052828659,
+            "fatigue": 38,
+            "notes": [
+              "Enemy action caused 26 condition damage.",
+              "Bombing specialist improved target effect."
+            ],
+            "status": "Home"
+          },
+          {
+            "id": "a3",
+            "name": "Second Helping",
+            "captain": "Kowalski",
+            "condition": 65,
+            "lost": false,
+            "aborted": false,
+            "contribution": 0.7849502183305931,
+            "fatigue": 26,
+            "notes": [
+              "Enemy action caused 20 condition damage."
+            ],
+            "status": "Home"
+          }
+        ],
+        "summary": "3 of 3 aircraft home. Target effect 100%; 9 campaign points. Extra allocation: none."
+      }
+    ],
+    "messages": [
+      {
+        "at": 1000,
+        "speaker": "Chief mechanic",
+        "text": "Paper Moon is in the bay. 2 spare parts committed; ready in 45 minutes.",
+        "tone": "normal"
+      },
+      {
+        "at": 1000,
+        "speaker": "Operations",
+        "text": "3 aircraft dispatched to Aircraft components plant. Captains have authority to turn back if their aircraft becomes unsafe.",
+        "tone": "normal"
+      },
+      {
+        "at": 1030.0,
+        "speaker": "Radio room",
+        "text": "Outbound report: 3 aircraft continuing toward the target. Crews are handling conditions on board.",
+        "tone": "normal"
+      },
+      {
+        "at": 1072.0,
+        "speaker": "Radio room",
+        "text": "Target phase complete. Bombing reports are being compiled. The formation is heading home.",
+        "tone": "normal"
+      },
+      {
+        "at": 1120,
+        "speaker": "Operations",
+        "text": "3 of 3 aircraft home. Target effect 100%; 9 campaign points. Extra allocation: none.",
+        "tone": "good"
+      },
+      {
+        "at": 3700,
+        "speaker": "Chief mechanic",
+        "text": "Paper Moon is repaired and cleared for service.",
+        "tone": "good"
+      }
+    ],
+    "clock_offset": 0,
+    "completed": false
+  }
+}
