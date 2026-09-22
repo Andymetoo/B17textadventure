@@ -1,70 +1,66 @@
-class CrewMember:
-    def __init__(self, name, role, skill=5):
-        self.name = name
-        self.role = role
-        self.skill = skill
-        self.hp = 100
-        self.stress = 0
-        # Assignments: 'Passive', 'Turret', 'Repairing', 'First Aid', 'Piloting'
-        self.current_assignment = "Passive" 
+"""JSON-safe campaign data. Each aircraft flies with its regular ten-person crew."""
+import random
+import secrets
 
-    def __repr__(self):
-        return f"<{self.name} ({self.role})>"
+SCHEMA_VERSION = 1
+CAMPAIGN_LENGTH = 12
+MAX_AIRCRAFT = 8
+ROSTER = [
+    ("Lucky Penny", "Reynolds", "steady", .86, 100, 22),
+    ("Belle of the Blue", "Morgan", "precision", .81, 94, 10),
+    ("Second Helping", "Kowalski", "navigator", .78, 88, 0),
+    ("Sunday Punch", "Halloway", "steady", .73, 100, 48),
+    ("Paper Moon", "Valenti", "navigator", .76, 62, 12),
+    ("Old Reliable", "Miller", "precision", .89, 78, 60),
+    ("Extra Trouble", "Brooks", "steady", .66, 100, 0),
+    ("Borrowed Time", "Ellis", "navigator", .66, 100, 0),
+]
+TRAITS = {
+    "steady": "Steady hands · less damage from enemy action",
+    "precision": "Bombing specialist · stronger target effect",
+    "navigator": "Weather reader · smaller visibility penalty",
+}
 
-class PlaneSection:
-    def __init__(self, name):
-        self.name = name
-        self.structure_hp = 100
-        self.is_on_fire = False
-        self.stationed_crew = []
 
-    def add_crew(self, crew_member):
-        if crew_member not in self.stationed_crew:
-            self.stationed_crew.append(crew_member)
+def new_aircraft(index, replacement=0):
+    name, captain, trait, skill, condition, fatigue = ROSTER[index]
+    if replacement:
+        name = f"{name} II" if replacement == 1 else f"{name} {replacement + 1}"
+        captain = f"Replacement crew {index + 1}-{replacement}"
+        skill, condition, fatigue = .65, 100, 0
+    return {"id": f"a{index + 1}", "name": name, "captain": captain,
+            "trait": trait, "skill": skill, "condition": condition,
+            "fatigue": fatigue, "sorties": 0, "lost": False,
+            "job": None, "replacement": replacement}
 
-    def remove_crew(self, crew_member):
-        if crew_member in self.stationed_crew:
-            self.stationed_crew.remove(crew_member)
 
-class B17:
-    def __init__(self):
-        # The 4 Engines (0-100%)
-        self.engines = [100, 100, 100, 100]
-        
-        # The Full Plane Layout (8 Sections)
-        self.sections = {
-            "Nose": PlaneSection("Nose"),             # Bombardier / Navigator
-            "Cockpit": PlaneSection("Cockpit"),       # Pilot / Co-Pilot
-            "Top Turret": PlaneSection("Top Turret"), # Engineer
-            "Bomb Bay": PlaneSection("Bomb Bay"),     # (Usually empty)
-            "Radio": PlaneSection("Radio Room"),      # Radio Operator
-            "Ball Turret": PlaneSection("Ball Turret"), # Ball Gunner
-            "Waist": PlaneSection("Waist"),           # Waist Gunners
-            "Tail": PlaneSection("Tail")              # Tail Gunner
-        }
-        
-        self.crew_roster = []
+def new_campaign(seed=None):
+    seed = secrets.randbelow(2 ** 31) if seed is None else seed
+    return {"schema": SCHEMA_VERSION, "seed": seed, "revision": 0,
+            "operation": 1, "length": CAMPAIGN_LENGTH, "score": 0,
+            "supplies": 18, "parts": 8, "losses": 0,
+            "aircraft": [new_aircraft(i) for i in range(6)],
+            "active": None, "debriefs": [], "messages": [],
+            "clock_offset": 0, "completed": False}
 
-    def add_crew_member(self, crew_member, section_name):
-        """Helper to place crew on the plane initially."""
-        if section_name in self.sections:
-            self.sections[section_name].add_crew(crew_member)
-            self.crew_roster.append(crew_member)
 
-    def get_crew_section(self, crew_member):
-        """Finds where a crew member is currently located."""
-        for section in self.sections.values():
-            if crew_member in section.stationed_crew:
-                return section
-        return None
-
-    def calculate_defense_score(self):
-        total_defense = 0
-        formation_bonus = 15 # Increased bonus for full crew
-        
-        for section in self.sections.values():
-            for crew in section.stationed_crew:
-                if crew.current_assignment == "Turret":
-                    total_defense += crew.skill
-        
-        return total_defense + formation_bonus
+def briefing(state):
+    """Stable offers: waiting or refreshing never changes the next briefing."""
+    rng = random.Random(f"{state['seed']}:briefing:{state['operation']}")
+    weather = rng.choice(["Clear", "Broken cloud", "Overcast"])
+    industry = ["Rail marshalling yard", "Engine assembly works", "Coastal repair docks",
+                "Aircraft components plant", "River freight junction", "Fuel distribution depot"]
+    support = ["Forward supply depot", "Coastal transport sidings", "Vehicle repair works"]
+    late = state['operation'] > 6
+    return [
+        {"id": "priority", "name": rng.choice(industry), "type": "Priority objective",
+         "description": "A valuable target with heavier defenses. A strong formation earns substantial campaign progress.",
+         "weather": weather, "risk": .43 if late else .36,
+         "required": 2.55 if late else 2.25, "reward": 9,
+         "cost": 2, "hours": 3, "bonus": "none"},
+        {"id": "support", "name": rng.choice(support), "type": "Supporting operation",
+         "description": "A shorter assignment. Effective bombing secures an extra allocation for this detachment.",
+         "weather": weather, "risk": .23, "required": 1.65,
+         "reward": 4, "cost": 1, "hours": 2,
+         "bonus": rng.choice(["supplies", "parts"])},
+    ]
